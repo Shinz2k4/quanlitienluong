@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from util.database import Database
+from util.db_manage_teacher import Database
 import sqlite3
 
 def create_faculty_frame():

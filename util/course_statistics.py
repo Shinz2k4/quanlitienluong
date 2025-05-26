@@ -1,13 +1,13 @@
 import tkinter as tk
 from tkinter import ttk
-from util.database import Database
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from util.db_manage_cour import Database
 
-def create_statistics_frame():
+def create_course_statistics_frame():
     frame = tk.Frame()
     
-    tk.Label(frame, text="THỐNG KÊ GIÁO VIÊN", font=("Arial", 14, "bold")).pack(anchor="w")
+    tk.Label(frame, text="THỐNG KÊ HỌC PHẦN", font=("Arial", 14, "bold")).pack(anchor="w")
     
     # Frame chứa các biểu đồ
     charts_frame = ttk.LabelFrame(frame, text="Biểu đồ thống kê")
@@ -23,7 +23,7 @@ def create_statistics_frame():
     # Hàm vẽ biểu đồ theo khoa
     def plot_faculty_stats():
         db = Database()
-        faculty_stats = db.get_teacher_count_by_faculty()
+        faculty_stats = db.get_course_count_by_faculty()
         
         # Tạo figure mới
         fig, ax = plt.subplots(figsize=(6, 4))
@@ -33,7 +33,7 @@ def create_statistics_frame():
         counts = [stat[1] for stat in faculty_stats]
         
         ax.bar(faculties, counts)
-        ax.set_title("Số lượng giáo viên theo khoa")
+        ax.set_title("Số lượng học phần theo khoa")
         ax.set_xlabel("Khoa")
         ax.set_ylabel("Số lượng")
         
@@ -45,32 +45,30 @@ def create_statistics_frame():
         canvas.draw()
         canvas.get_tk_widget().pack(fill="both", expand=True)
     
-    # Hàm vẽ biểu đồ theo bằng cấp
-    def plot_degree_stats():
+    # Hàm vẽ biểu đồ theo số tín chỉ
+    def plot_credits_stats():
         db = Database()
-        degree_stats = db.get_teacher_count_by_degree()
+        credits_stats = db.get_course_count_by_credits()
         
         # Tạo figure mới
         fig, ax = plt.subplots(figsize=(6, 4))
         
         # Vẽ biểu đồ cột
-        degrees = [stat[0] for stat in degree_stats]
-        counts = [stat[1] for stat in degree_stats]
+        credits = [stat[0] for stat in credits_stats]
+        counts = [stat[1] for stat in credits_stats]
         
-        ax.bar(degrees, counts)
-        ax.set_title("Số lượng giáo viên theo bằng cấp")
-        ax.set_xlabel("Bằng cấp")
+        ax.bar(credits, counts)
+        ax.set_title("Số lượng học phần theo số tín chỉ")
+        ax.set_xlabel("Số tín chỉ")
         ax.set_ylabel("Số lượng")
-        
-        # Xoay nhãn trục x để dễ đọc
-        plt.xticks(rotation=45, ha='right')
         
         # Tạo canvas để hiển thị biểu đồ trong tkinter
         canvas = FigureCanvasTkAgg(fig, master=right_frame)
         canvas.draw()
         canvas.get_tk_widget().pack(fill="both", expand=True)
+    
     # Vẽ các biểu đồ
     plot_faculty_stats()
-    plot_degree_stats()
+    plot_credits_stats()
     
     return frame

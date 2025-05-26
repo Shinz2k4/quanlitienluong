@@ -43,7 +43,7 @@ class Database:
         CREATE TABLE IF NOT EXISTS teachers (
             teacher_id TEXT PRIMARY KEY,
             full_name TEXT NOT NULL,
-            birth_date TEXT,
+            birth_date DATE,
             phone TEXT,
             email TEXT,
             faculty_id TEXT,
