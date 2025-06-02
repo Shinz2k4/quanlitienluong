@@ -108,6 +108,24 @@ def create_teacher_frame():
                 clear_entries()
             except Exception as e:
                 messagebox.showerror("Lỗi", f"Cập nhật thất bại: {str(e)}")
+
+        def delete_teacher():
+            selected_item = tree.selection()
+            if not selected_item:
+                messagebox.showerror("Lỗi", "Vui lòng chọn giáo viên cần xóa!")
+                return
+                
+            teacher_id = tree.item(selected_item[0])['values'][0]
+            
+            if messagebox.askyesno("Xác nhận", "Bạn có chắc chắn muốn xóa giáo viên này?"):
+                db = Database()
+                try:
+                    db.delete_teacher(teacher_id)
+                    messagebox.showinfo("Thành công", "Xóa giáo viên thành công!")
+                    refresh_tree()
+                    clear_entries()
+                except Exception as e:
+                    messagebox.showerror("Lỗi", f"Xóa thất bại: {str(e)}")
         
         def clear_entries():
             teacher_id_entry.delete(0, tk.END)
@@ -142,14 +160,14 @@ def create_teacher_frame():
                 email_entry.insert(0, values[4])
                 
                 # Set combobox values
-                faculty_text = f"{values[5]} - {values[5]}" if values[5] else ""
-                degree_text = f"{values[6]} - {values[6]}" if values[6] else ""
+                faculty_text = f"{values[5]} - {values[6]}" if values[5] else ""
+                degree_text = f"{values[7]} - {values[8]}" if values[7] else ""
                 faculty_combobox.set(faculty_text)
                 degree_combobox.set(degree_text)
         
         ttk.Button(button_frame, text="Thêm", command=add_teacher).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Sửa", command=edit_teacher).pack(side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text="Xóa", command=lambda: clear_entries()).pack(side=tk.LEFT, padx=5)
+        ttk.Button(button_frame, text="Xóa", command=delete_teacher).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Làm mới", command=lambda: [load_combobox_data(), refresh_tree()]).pack(side=tk.LEFT, padx=5)
         
         # Treeview hiển thị danh sách giáo viên

@@ -11,9 +11,8 @@ import util.manage_class as manage_class
 import util.manage_teaching as manage_teaching
 import util.course_statistics as course_statistics
 
+
 def main():
-    # Khởi tạo database
-    db = Database()
 
     # Tạo cửa sổ chính
     root = tk.Tk()
@@ -92,8 +91,8 @@ def main():
                 button.config(command=lambda: show_frame("teaching"))
             elif text == "Thống kê lớp học":
                 button.config(command=lambda: show_frame("course_stats"))
-        
-    # Hiển thị frame giáo viên mặc định
-    show_frame("teacher")
+
+
+    show_frame("faculty") 
 
     root.mainloop()

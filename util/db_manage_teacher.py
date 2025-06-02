@@ -53,6 +53,30 @@ class Database:
         )
         ''')
         
+        # Tạo bảng học phần
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS courses (
+            course_id TEXT PRIMARY KEY,
+            course_name TEXT NOT NULL,
+            credits INTEGER NOT NULL,
+            coefficient REAL NOT NULL,
+            total_hours INTEGER NOT NULL
+        )
+        ''')
+        
+        # Tạo bảng phân công giảng dạy
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS teaching_assignments (
+            assignment_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            teacher_id TEXT NOT NULL,
+            course_id TEXT NOT NULL,
+            semester TEXT NOT NULL,
+            academic_year TEXT NOT NULL,
+            FOREIGN KEY (teacher_id) REFERENCES teachers (teacher_id) ON DELETE CASCADE,
+            FOREIGN KEY (course_id) REFERENCES courses (course_id) ON DELETE CASCADE
+        )
+        ''')
+        
         conn.commit()
         conn.close()
     
@@ -193,59 +217,73 @@ class Database:
             conn.commit()
         finally:
             conn.close()
-    def get_teacher_count_by_faculty(self):
+
+    # === CRUD operations for Courses ===
+    def add_course(self, course_id, course_name, credits, coefficient, total_hours):
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
             cursor.execute('''
-                SELECT f.full_name, COUNT(t.teacher_id) as total_teachers
-                FROM faculties f
-                LEFT JOIN teachers t ON f.faculty_id = t.faculty_id
-                GROUP BY f.faculty_id
-            ''')
-            return cursor.fetchall()
-        finally:
-            conn.close()
-    def get_teacher_count_by_degree(self):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        try:
-            cursor.execute('''
-                SELECT d.full_name, COUNT(t.teacher_id) as total_teachers
-                FROM degrees d
-                LEFT JOIN teachers t ON d.degree_id = t.degree_id
-                GROUP BY d.degree_id
-            ''')
-            return cursor.fetchall()
-        finally:
-            conn.close()
-
-    def get_all_faculties(self):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        try:
-            cursor.execute('SELECT * FROM faculties')
-            return cursor.fetchall()
-        finally:
-            conn.close()
-
-    def get_all_degrees(self):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        try:
-            cursor.execute('SELECT * FROM degrees')
-            return cursor.fetchall()
-        finally:
-            conn.close()
-
-    def add_teacher(self, teacher_id, full_name, birth_date, phone, email, faculty_id, degree_id):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        try:
-            cursor.execute('''
-                INSERT INTO teachers (teacher_id, full_name, birth_date, phone, email, faculty_id, degree_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ''', (teacher_id, full_name, birth_date, phone, email, faculty_id, degree_id))
+            INSERT INTO courses (course_id, course_name, credits, coefficient, total_hours)
+            VALUES (?, ?, ?, ?, ?)
+            ''', (course_id, course_name, credits, coefficient, total_hours))
             conn.commit()
+        finally:
+            conn.close()
+    
+    def get_all_courses(self):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute('SELECT * FROM courses')
+            return cursor.fetchall()
+        finally:
+            conn.close()
+    
+    def update_course(self, course_id, course_name, credits, coefficient, total_hours):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute('''
+            UPDATE courses 
+            SET course_name = ?, credits = ?, coefficient = ?, total_hours = ?
+            WHERE course_id = ?
+            ''', (course_name, credits, coefficient, total_hours, course_id))
+            conn.commit()
+        finally:
+            conn.close()
+    
+    def delete_course(self, course_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute('DELETE FROM courses WHERE course_id = ?', (course_id,))
+            conn.commit()
+        finally:
+            conn.close()
+
+    # === CRUD operations for Teaching Assignments ===
+    def add_teaching_assignment(self, teacher_id, course_id, semester, academic_year):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute('''
+            INSERT INTO teaching_assignments (teacher_id, course_id, semester, academic_year)
+            VALUES (?, ?, ?, ?)
+            ''', (teacher_id, course_id, semester, academic_year))
+            conn.commit()
+        finally:
+            conn.close()
+    def get_all_teaching_assignments(self):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute('''
+            SELECT ta.*, t.full_name as teacher_name, c.course_name
+            FROM teaching_assignments ta
+            JOIN teachers t ON ta.teacher_id = t.teacher_id
+            JOIN courses c ON ta.course_id = c.course_id
+            ''')
+            return cursor.fetchall()
         finally:
             conn.close()

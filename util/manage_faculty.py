@@ -56,6 +56,48 @@ def create_faculty_frame():
             clear_entries()
         except sqlite3.IntegrityError:
             messagebox.showerror("Lỗi", "Mã khoa đã tồn tại!")
+
+    def edit_faculty():
+        selected_item = tree.selection()
+        if not selected_item:
+            messagebox.showerror("Lỗi", "Vui lòng chọn khoa cần sửa!")
+            return
+            
+        faculty_id = faculty_id_entry.get()
+        faculty_name = faculty_name_entry.get()
+        abbreviation = abbreviation_entry.get()
+        description = description_entry.get()
+        head = head_entry.get()
+        
+        if not faculty_id or not faculty_name or not abbreviation:
+            messagebox.showerror("Lỗi", "Vui lòng nhập đầy đủ thông tin bắt buộc!")
+            return
+            
+        db = Database()
+        try:
+            db.update_faculty(faculty_id, faculty_name, abbreviation, description, head)
+            messagebox.showinfo("Thành công", "Sửa khoa thành công!")
+            refresh_tree()
+            clear_entries()
+        except sqlite3.IntegrityError:
+            messagebox.showerror("Lỗi", "Mã khoa đã tồn tại!")
+    
+    def delete_faculty():
+        selected_item = tree.selection()
+        if not selected_item:
+            messagebox.showerror("Lỗi", "Vui lòng chọn khoa cần xóa!")
+            return
+            
+        if messagebox.askyesno("Xác nhận", "Bạn có chắc chắn muốn xóa khoa này?"):
+            faculty_id = tree.item(selected_item[0])['values'][0]
+            db = Database()
+            try:
+                db.delete_faculty(faculty_id)
+                messagebox.showinfo("Thành công", "Xóa khoa thành công!")
+                refresh_tree()
+                clear_entries()
+            except Exception as e:
+                messagebox.showerror("Lỗi", f"Xóa thất bại: {str(e)}")
     
     def clear_entries():
         faculty_id_entry.delete(0, tk.END)
@@ -71,9 +113,25 @@ def create_faculty_frame():
         faculties = db.get_all_faculties()
         for faculty in faculties:
             tree.insert("", tk.END, values=faculty)
+
+    def on_select(event):
+        selected_item = tree.selection()
+        if selected_item:
+            values = tree.item(selected_item[0])['values']
+            faculty_id_entry.delete(0, tk.END)
+            faculty_id_entry.insert(0, values[0])
+            faculty_name_entry.delete(0, tk.END)
+            faculty_name_entry.insert(0, values[1])
+            abbreviation_entry.delete(0, tk.END)
+            abbreviation_entry.insert(0, values[2])
+            description_entry.delete(0, tk.END)
+            description_entry.insert(0, values[3])
+            head_entry.delete(0, tk.END)
+            head_entry.insert(0, values[4])
     
     ttk.Button(button_frame, text="Thêm", command=add_faculty).pack(side=tk.LEFT, padx=5)
-    ttk.Button(button_frame, text="Xóa", command=lambda: clear_entries()).pack(side=tk.LEFT, padx=5)
+    ttk.Button(button_frame, text="Sửa", command=edit_faculty).pack(side=tk.LEFT, padx=5)
+    ttk.Button(button_frame, text="Xóa", command=delete_faculty).pack(side=tk.LEFT, padx=5)
     ttk.Button(button_frame, text="Làm mới", command=refresh_tree).pack(side=tk.LEFT, padx=5)
     
     # Treeview hiển thị danh sách khoa
@@ -91,6 +149,7 @@ def create_faculty_frame():
     tree.column("Trưởng khoa", width=150)
     
     tree.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+    tree.bind('<<TreeviewSelect>>', on_select)
     
     # Load dữ liệu ban đầu
     refresh_tree()

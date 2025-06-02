@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from util.db_manage_cour import Database
+from util.db_manage_course import Database
 
 def create_course_statistics_frame():
     frame = tk.Frame()

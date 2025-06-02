@@ -47,6 +47,45 @@ def create_degree_frame():
             clear_entries()
         except sqlite3.IntegrityError:
             messagebox.showerror("Lỗi", "Mã bằng cấp đã tồn tại!")
+
+    def edit_degree():
+        selected_item = tree.selection()
+        if not selected_item:
+            messagebox.showerror("Lỗi", "Vui lòng chọn bằng cấp cần sửa!")
+            return
+            
+        values = {name: entry.get() for name, entry in entries.items()}
+        if not all(values.values()):
+            messagebox.showerror("Lỗi", "Vui lòng nhập đầy đủ thông tin!")
+            return
+            
+        old_id = tree.item(selected_item[0])['values'][0]
+        db = Database()
+        try:
+            # Fixed: Removed old_id from parameters since it's not needed
+            db.update_degree(values["degree_id"], values["full_name"], values["abbreviation"])
+            messagebox.showinfo("Thành công", "Sửa bằng cấp thành công!")
+            refresh_tree()
+            clear_entries()
+        except sqlite3.IntegrityError:
+            messagebox.showerror("Lỗi", "Mã bằng cấp đã tồn tại!")
+    
+    def delete_degree():
+        selected_item = tree.selection()
+        if not selected_item:
+            messagebox.showerror("Lỗi", "Vui lòng chọn bằng cấp cần xóa!")
+            return
+            
+        if messagebox.askyesno("Xác nhận", "Bạn có chắc chắn muốn xóa bằng cấp này?"):
+            degree_id = tree.item(selected_item[0])['values'][0]
+            db = Database()
+            try:
+                db.delete_degree(degree_id)
+                messagebox.showinfo("Thành công", "Xóa bằng cấp thành công!")
+                refresh_tree()
+                clear_entries()
+            except Exception as e:
+                messagebox.showerror("Lỗi", f"Xóa thất bại: {str(e)}")
     
     def clear_entries():
         for entry in entries.values():
@@ -59,10 +98,19 @@ def create_degree_frame():
         degrees = db.get_all_degrees()
         for degree in degrees:
             tree.insert("", tk.END, values=degree)
+
+    def on_select(event):
+        selected_item = tree.selection()
+        if selected_item:
+            values = tree.item(selected_item[0])['values']
+            for i, (_, field_name) in enumerate(fields):
+                entries[field_name].delete(0, tk.END)
+                entries[field_name].insert(0, values[i])
     
     # Buttons
     ttk.Button(button_frame, text="Thêm", command=add_degree).pack(side=tk.LEFT, padx=5)
-    ttk.Button(button_frame, text="Xóa", command=clear_entries).pack(side=tk.LEFT, padx=5)
+    ttk.Button(button_frame, text="Sửa", command=edit_degree).pack(side=tk.LEFT, padx=5)
+    ttk.Button(button_frame, text="Xóa", command=delete_degree).pack(side=tk.LEFT, padx=5)
     ttk.Button(button_frame, text="Làm mới", command=refresh_tree).pack(side=tk.LEFT, padx=5)
     
     # Treeview
@@ -74,6 +122,7 @@ def create_degree_frame():
         tree.column(col, width=100 if col != "Tên đầy đủ" else 200)
     
     tree.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+    tree.bind('<<TreeviewSelect>>', on_select)
     
     # Initial data load
     refresh_tree()
