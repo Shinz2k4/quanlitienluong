@@ -94,7 +94,7 @@ const TeacherPage = () => {
         setEditing(record);
         form.setFieldsValue({
             ...record,
-            dob: record.dob ? record.dob.slice(0, 10) : "",
+            dob: record.dob ? moment(record.dob) : null,
             department: record.department?._id,
             degree: record.degree?._id,
         });
@@ -115,6 +115,12 @@ const TeacherPage = () => {
     const handleOk = async () => {
         try {
             const values = await form.validateFields();
+            console.log("=== FORM VALUES ===");
+            console.log("Toàn bộ dữ liệu form:", values);
+            console.log("Ngày sinh (dob):", values.dob);
+            console.log("Type của dob:", typeof values.dob);
+            console.log("==================");
+
             if (editing) {
                 await axiosClient.put(`/teachers/${editing._id}`, values);
             } else {
@@ -124,7 +130,10 @@ const TeacherPage = () => {
             setModalOpen(false);
             toast.success("Thao tác thành công!");
         } catch (error) {
-            console.error(error);
+            console.error("=== FORM ERROR ===");
+            console.error("Lỗi validation:", error);
+            console.error("Error fields:", error.errorFields);
+            console.error("==================");
             toast.error(error.response?.data?.message || "Đã có lỗi xảy ra");
         }
     };
@@ -212,26 +221,48 @@ const TeacherPage = () => {
                             },
                             {
                                 validator: (_, value) => {
-                                    if (!value) return Promise.resolve();
-                                    
-                                    // Tính tuổi chính xác hơn bằng cách tính toán đầy đủ ngày tháng năm
-                                    const birthDate = new Date(value);
-                                    const today = new Date();
-                                    
-                                    let age = today.getFullYear() - birthDate.getFullYear();
-                                    const monthDiff = today.getMonth() - birthDate.getMonth();
-                                    
-                                    // Nếu chưa tới tháng sinh nhật hoặc tới tháng sinh nhật nhưng chưa tới ngày
-                                    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                                        age--;
-                                    }
-                                    
-                                    if (age < 22) {
-                                        return Promise.reject(
-                                            new Error(
-                                                "Giảng viên phải từ 22 tuổi trở lên."
-                                            )
+                                    if (value) {
+                                        const currentYear = moment().year();
+                                        let birthYear;
+
+                                        // Xử lý cả moment object và string
+                                        if (value.$y) {
+                                            // Moment object từ DatePicker
+                                            birthYear = value.$y;
+                                        } else if (typeof value === "string") {
+                                            // String date từ backend
+                                            birthYear = moment(value).year();
+                                        } else {
+                                            // Moment object từ handleEdit
+                                            birthYear = value.year();
+                                        }
+
+                                        const age = currentYear - birthYear;
+
+                                        console.log("=== DEBUG TUỔI ===");
+                                        console.log(
+                                            "Ngày sinh được chọn:",
+                                            value
                                         );
+                                        console.log(
+                                            "Năm hiện tại:",
+                                            currentYear
+                                        );
+                                        console.log("Năm sinh:", birthYear);
+                                        console.log("Tuổi tính được:", age);
+                                        console.log(
+                                            "Điều kiện age >= 22:",
+                                            age >= 22
+                                        );
+                                        console.log("==================");
+
+                                        if (age < 22) {
+                                            return Promise.reject(
+                                                new Error(
+                                                    "Giảng viên phải từ 22 tuổi trở lên."
+                                                )
+                                            );
+                                        }
                                     }
                                     return Promise.resolve();
                                 },
